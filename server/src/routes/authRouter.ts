@@ -1,61 +1,84 @@
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { pool } from '../db'; // Adjust the import path according to your project structure
+import { pool } from '../db';
+
 
 const authRouter = express.Router();
+const JWT_SECRET = process.env.JWT_SECRET;
+
+if (!JWT_SECRET) {
+    throw new Error("Missing environment variable JWT_SECRET");
+}
+
 
 // Registration endpoint
 authRouter.post('/register', async (req: Request, res: Response) => {
     const { username, email, password } = req.body;
-    
-    // Hash password
-    const saltRounds = 10; // Cost factor for hashing
-    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    console.log("Attempting to register user:", email);
 
     try {
-        // Insert the new user into the database
-        const result = await pool.query(
-            'INSERT INTO users (username, email, hashed_password) VALUES ($1, $2, $3) RETURNING id',
-            [username, email, hashedPassword]
-        );
-        const userId = result.rows[0].id;
+        // Check if user already exists
+        const existingUser = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
 
-        // Respond with the new user's ID
-        res.status(201).json({ userId });
+        if (existingUser.rows.length > 0) {
+            console.log("User already exists:", email);
+            return res.status(409).send('User already exists');
+        } else {
+            console.log("Registering new user:", email);
+            // Hash the password
+            const hashedPassword = await bcrypt.hash(password, 10);
+            
+            // Insert new user into the database
+            const newUser = await pool.query(
+                'INSERT INTO users (username, email, hashed_password) VALUES ($1, $2, $3) RETURNING *',
+                [username, email, hashedPassword]
+            );
+            
+            // Optionally, log the new user's ID or other info
+            console.log("New user registered:", newUser.rows[0].id);
+            
+            res.status(201).json(newUser.rows[0]);
+        }
     } catch (err) {
         console.error(err);
         res.status(500).send('Error registering new user');
     }
 });
 
+
 // Login endpoint
 authRouter.post('/login', async (req: Request, res: Response) => {
     const { email, password } = req.body;
 
     try {
-        // Retrieve user from the database
+        // Attempt to find the user by email
         const userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
-        
-        if (userResult.rows.length > 0) {
-            const user = userResult.rows[0];
-
-            // Check password
-            const match = await bcrypt.compare(password, user.hashed_password);
-
-            if (match) {
-                // Generate a JWT
-                const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-
-                res.json({ token });
-            } else {
-                res.status(401).send('Incorrect password');
-            }
-        } else {
-            res.status(404).send('User not found');
+        if (userResult.rows.length === 0) {
+            return res.status(404).send('User not found');
         }
+
+        const user = userResult.rows[0];
+
+        // Check if the provided password matches the stored hashed password
+        const match = await bcrypt.compare(password, user.hashed_password);
+        if (!match) {
+            return res.status(401).send('Incorrect password');
+        }
+
+        // User is authenticated, generate a JWT token
+        const token = jwt.sign(
+            { userId: user.id }, // Payload
+            process.env.JWT_SECRET!, // Asserting JWT_SECRET is not undefined
+            { expiresIn: '1h' } // Token expiry
+        );
+
+        // Send the token to the client
+        res.json({ token });
+
     } catch (err) {
-        console.error(err);
+        console.error('Error logging in user:', err);
         res.status(500).send('Error logging in user');
     }
 });
