@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Recipe Saver</title>
+    <link rel="stylesheet" href="popup.css" />
+    <!-- Link to your SCSS compiled CSS file -->
+  </head>
+  <body>
+    <div class="popup">
+      <header class="popup__header">
+        <h1 class="popup__title">Recipe Saver</h1>
+      </header>
+      <div class="popup__content">
+        <input
+          type="text"
+          class="popup__search"
+          placeholder="Search recipes..."
+        />
+        <button class="popup__button popup__button--search">Search</button>
+      </div>
+      <ul class="popup__recipes">
+        <!-- Dynamically added recipe items will go here -->
+      </ul>
+      <footer class="popup__footer">
+        <button class="popup__button popup__button--save">
+          Save Current Page
+        </button>
+      </footer>
+    </div>
+    <script src="popup.js"></script>
+    <!-- Link to your popup JavaScript file -->
+  </body>
+</html>
