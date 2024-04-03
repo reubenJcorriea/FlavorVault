@@ -10,23 +10,24 @@ const isRecipePage = (): boolean => {
 
 const scrapeRecipeData = (): any => {
   // Placeholder logic for scraping a recipe. This will need to be adjusted.
-  let title = document.querySelector("h1")?.innerText || "Unknown Title";
-  let ingredients = Array.from(
+let title = document.querySelector("h1")?.innerText || "Unknown Title";
+let ingredients = Array.from(
     document.querySelectorAll("[itemprop='recipeIngredient'], .ingredients li")
-  ).map((el) => el.innerText.trim());
-  let directions = Array.from(
+).map((el) => (el as HTMLElement).innerText.trim());
+let directions = Array.from(
     document.querySelectorAll(
-      "[itemprop='recipeInstructions'], .directions li, .instructions li"
+        "[itemprop='recipeInstructions'], .directions li, .instructions li"
     )
-  ).map((el) => el.innerText.trim());
-  let image =
+).map((el) => (el as HTMLElement).innerText.trim());
+let image =
     document.querySelector("[itemprop='image']")?.getAttribute("src") || "";
 
-  // Extract additional information as needed, such as cooking time, serving size, etc.
-  let cookingTime =
-    document.querySelector("[itemprop='totalTime']")?.innerText || "Unknown";
-  let servings =
-    document.querySelector("[itemprop='recipeYield']")?.innerText ||
+// Extract additional information as needed, such as cooking time, serving size, etc.
+let cookingTime =
+    (document.querySelector("[itemprop='totalTime']") as HTMLElement)?.innerText ||
+    "Unknown";
+let servings =
+    (document.querySelector("[itemprop='recipeYield']") as HTMLElement)?.innerText ||
     "Serves Unknown";
 
   return {
@@ -39,8 +40,10 @@ const scrapeRecipeData = (): any => {
   };
 };
 
+declare const chrome: any;
+
 const sendMessageToBackground = (message: any): void => {
-  chrome.runtime.sendMessage(message);
+    chrome.runtime.sendMessage(message);
 };
 
 document.addEventListener("DOMContentLoaded", () => {
