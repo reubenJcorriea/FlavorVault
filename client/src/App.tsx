@@ -1,11 +1,21 @@
 import React from 'react';
-import './styles/App.css';
+import './styles/popup.scss'; 
 
-function App() {
+import Header from './components/Header/Header';
+import SearchBar from './components/SearchBar/SearchBar';
+import RecipeList from './components/RecipeList/RecipeList';
+import Footer from './components/Footer/Footer';
+
+
+const App = () => {
   return (
-      <>
-      </>
+    <div className="popup">
+      <Header />
+      <SearchBar />
+      <RecipeList />
+      <Footer />
+    </div>
   );
-}
+};
 
 export default App;
