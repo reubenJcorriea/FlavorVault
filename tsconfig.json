@@ -8,6 +8,7 @@
     "moduleResolution": "node",
     "skipLibCheck": true,
     "isolatedModules": true,
+    "types": ["chrome"],
     "outDir": "./dist",
     "sourceMap": true,
     "jsx": "react-jsx"
