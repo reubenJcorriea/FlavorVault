@@ -41,3 +41,4 @@ const main = () => {
 };
 document.addEventListener("DOMContentLoaded", main);
 export {};
+//# sourceMappingURL=contentScript.js.map
