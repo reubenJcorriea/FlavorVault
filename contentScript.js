@@ -1,29 +1,43 @@
-"use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-var isRecipePage = function () {
+// Utility function to get text content from a selector
+const querySelectorText = (selector) => {
+    var _a;
+    return (((_a = document.querySelector(selector)) === null || _a === void 0 ? void 0 : _a.innerText.trim()) ||
+        "Unknown");
+};
+// Utility function to get an array of text contents from a list of elements matched by a selector
+const querySelectorAllText = (selector) => {
+    return Array.from(document.querySelectorAll(selector)).map((el) => el.innerText.trim());
+};
+// Check if the current page is a recipe page based on specific schema markup
+const isRecipePage = () => {
     return Boolean(document.querySelector("[itemtype='http://schema.org/Recipe'], [itemtype='https://schema.org/Recipe']"));
 };
-var scrapeRecipeData = function () {
-    var _a, _b, _c, _d;
-    var title = ((_a = document.querySelector("h1")) === null || _a === void 0 ? void 0 : _a.innerText) || "Unknown Title";
-    var ingredients = Array.from(document.querySelectorAll("[itemprop='recipeIngredient'], .ingredients li"))
-        .map(function (el) { return el.innerText.trim(); });
-    var directions = Array.from(document.querySelectorAll("[itemprop='recipeInstructions'], .directions li, .instructions li"))
-        .map(function (el) { return el.innerText.trim(); });
-    var image = ((_b = document.querySelector("[itemprop='image']")) === null || _b === void 0 ? void 0 : _b.getAttribute("src")) || "";
-    var cookingTime = ((_c = document.querySelector("[itemprop='totalTime']")) === null || _c === void 0 ? void 0 : _c.innerText) || "Unknown";
-    var servings = ((_d = document.querySelector("[itemprop='recipeYield']")) === null || _d === void 0 ? void 0 : _d.innerText) || "Serves Unknown";
-    return { title: title, ingredients: ingredients, directions: directions, image: image, cookingTime: cookingTime, servings: servings };
+// Scrape recipe data from the current page
+const scrapeRecipeData = () => {
+    var _a;
+    const title = querySelectorText("h1");
+    const ingredients = querySelectorAllText("[itemprop='recipeIngredient'], .ingredients li");
+    const directions = querySelectorAllText("[itemprop='recipeInstructions'], .directions li, .instructions li");
+    const image = ((_a = document.querySelector("[itemprop='image']")) === null || _a === void 0 ? void 0 : _a.getAttribute("src")) || "";
+    const cookingTime = querySelectorText("[itemprop='totalTime']");
+    const servings = querySelectorText("[itemprop='recipeYield']");
+    return { title, ingredients, directions, image, cookingTime, servings };
 };
-var sendMessageToBackground = function (message) {
+//   Send a message to the background script
+const sendMessageToBackground = (message) => {
     chrome.runtime.sendMessage(message);
 };
-document.addEventListener("DOMContentLoaded", function () {
+// Main function to execute when the DOM is fully loaded
+const main = () => {
     if (isRecipePage()) {
-        var recipeData = scrapeRecipeData();
+        const recipeData = scrapeRecipeData();
+        console.log("Scraped recipe data:", recipeData);
         sendMessageToBackground({ action: "saveRecipe", data: recipeData });
     }
     else {
+        console.error("Not a recipe page or recipe schema not found.");
         sendMessageToBackground({ action: "invalidPage" });
     }
-});
+};
+document.addEventListener("DOMContentLoaded", main);
+export {};
