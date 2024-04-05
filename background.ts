@@ -13,6 +13,27 @@ interface SendResponse {
   data?: RecipeData[];
 }
 
+chrome.runtime.onMessage.addListener((message: { action: string; data?: RecipeData }, sender, sendResponse) => {
+  if (message.action === "saveRecipe") {
+    // Make sure the URL points to your actual API endpoint
+    fetch('https://yourbackend.com/api/recipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(message.data),
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log("Recipe saved successfully:", data);
+      sendResponse({status: "success", data});
+    })
+    .catch(error => {
+      console.error("Failed to save recipe:", error);
+      sendResponse({status: "error", error: error.toString()});
+    });
+    return true; // indicates you wish to send a response asynchronously
+  }
+});
+
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener(
   async (
