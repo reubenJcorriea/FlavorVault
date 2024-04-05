@@ -1,0 +1,35 @@
+@use "../../styles/partials/elements";
+@use "../../styles/partials/mixins";
+@use "../../styles/partials/typography";
+@use "../../styles/partials/variables";
+
+.header {
+  background-color: #4caf50;
+  color: white; // Changed to white for better contrast
+  padding: 1rem;
+  cursor: pointer; // Indicates the header is clickable
+  user-select: none; // Prevents text selection on click
+  transition: background-color 0.3s ease; // Smooth transition for background color
+
+  &:hover {
+    background-color: darken(#4caf50, 10%); // Darkens the background color on hover
+  }
+
+  &:active {
+    background-color: lighten(#4caf50, 10%); // Lightens the background color on click
+    transform: scale(0.98); // Slight scale down for tactile feedback
+  }
+
+  &__content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-align: center;
+  }
+}

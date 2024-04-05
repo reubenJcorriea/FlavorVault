@@ -1,0 +1,56 @@
+@use "../../styles/partials/elements";
+@use "../../styles/partials/mixins";
+@use "../../styles/partials/typography";
+@use "../../styles/partials/variables";
+
+
+.recipe-list {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    max-width: 18.75rem; // Your specified width
+    height: 100vh; // Full height of the viewport
+    overflow-y: auto; // Allows scrolling if the content overflows
+  
+    &__sort-controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+  
+      .sort-button {
+        padding: 0.5rem 1rem;
+        background-color: #4caf50; // Example variable for the green color
+        color: #fff;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+  
+        &:hover {
+          background-color: darken(#4caf50, 10%);
+        }
+  
+        &.active {
+          background-color: lighten(#4caf50, 10%);
+        }
+      }
+    }
+  
+    &__item {
+      padding: 0.75rem;
+      border-bottom: 1px solid #eee; // Light grey to separate recipes
+  
+      &:last-child {
+        border-bottom: none; // Removes the border for the last item
+      }
+    }
+  
+    &__date {
+      font-weight: bold;
+      color: darken(#4caf50, 20%); // A darker shade for the month
+      margin-top: 0.5rem;
+    }
+  }
