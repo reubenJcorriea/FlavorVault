@@ -1,76 +1,60 @@
 export {};
 
-// Define interfaces for better type checking and readability
-interface ScrapedRecipeData {
+interface RecipeData {
+  url: string;
   title: string;
   ingredients: string[];
   directions: string[];
-  image: string;
-  cookingTime: string;
-  servings: string;
+  image?: string;
+  cookingTime?: string;
+  servings?: string;
 }
 
-interface MessageToBackground {
-  action: "saveRecipe" | "invalidPage";
-  data?: ScrapedRecipeData;
-}
-
-// Utility function to get text content from a selector
-const querySelectorText = (selector: string): string => {
-  return (
-    (document.querySelector(selector) as HTMLElement)?.innerText.trim() ||
-    "Unknown"
-  );
+const getTextContent = (selector: string): string => {
+  const element = document.querySelector(selector);
+  return element ? element.textContent?.trim() || "Unknown" : "Unknown";
 };
 
-// Utility function to get an array of text contents from a list of elements matched by a selector
-const querySelectorAllText = (selector: string): string[] => {
-  return Array.from(document.querySelectorAll(selector)).map((el) =>
-    (el as HTMLElement).innerText.trim()
-  );
+const getListContent = (selector: string): string[] => {
+  return Array.from(document.querySelectorAll(selector))
+              .map(el => el.textContent?.trim() || "")
+              .filter(text => text.length > 0); // Filter out empty strings
 };
 
-// Check if the current page is a recipe page based on specific schema markup
-const isRecipePage = (): boolean => {
-  return Boolean(
-    document.querySelector(
-      "[itemtype='http://schema.org/Recipe'], [itemtype='https://schema.org/Recipe']"
-    )
-  );
-};
-
-// Scrape recipe data from the current page
-const scrapeRecipeData = (): ScrapedRecipeData => {
-  const title = querySelectorText("h1");
-  const ingredients = querySelectorAllText(
-    "[itemprop='recipeIngredient'], .ingredients li"
-  );
-  const directions = querySelectorAllText(
-    "[itemprop='recipeInstructions'], .directions li, .instructions li"
-  );
-  const image =
-    document.querySelector("[itemprop='image']")?.getAttribute("src") || "";
-  const cookingTime = querySelectorText("[itemprop='totalTime']");
-  const servings = querySelectorText("[itemprop='recipeYield']");
-
-  return { title, ingredients, directions, image, cookingTime, servings };
-};
-
-//   Send a message to the background script
-const sendMessageToBackground = (message: MessageToBackground) => {
-  chrome.runtime.sendMessage(message);
-};
-
-// Main function to execute when the DOM is fully loaded
-const main = () => {
-  if (isRecipePage()) {
-    const recipeData = scrapeRecipeData();
-    console.log("Scraped recipe data:", recipeData);
-    sendMessageToBackground({ action: "saveRecipe", data: recipeData });
-  } else {
+const scrapeRecipeData = (): RecipeData | null => {
+  if (!document.querySelector("[itemprop='recipeIngredient'], .ingredients li")) {
     console.error("Not a recipe page or recipe schema not found.");
-    sendMessageToBackground({ action: "invalidPage" });
+    sendMessageToBackground({ action: "invalidPage", data: { url: window.location.href, title: "", ingredients: [], directions: [] } });
+    return null;
   }
+
+  const recipeData: RecipeData = {
+    url: window.location.href,
+    title: getTextContent("h1"),
+    ingredients: getListContent("[itemprop='recipeIngredient'], .ingredients li"),
+    directions: getListContent("[itemprop='recipeInstructions'], .directions li, .instructions li"),
+    image: document.querySelector("[itemprop='image']")?.getAttribute("src") ?? "",
+    cookingTime: getTextContent("[itemprop='totalTime']"),
+    servings: getTextContent("[itemprop='recipeYield']")
+  };
+
+  console.log("Scraped recipe data:", recipeData);
+  return recipeData;
 };
 
-document.addEventListener("DOMContentLoaded", main);
+const sendMessageToBackground = (message: { action: string; data?: RecipeData }) => {
+  chrome.runtime.sendMessage(message, (response) => {
+    if (chrome.runtime.lastError) {
+      console.error('Error sending message to background script:', chrome.runtime.lastError);
+    } else {
+      console.log('Response from background:', response);
+    }
+  });
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  const recipeData = scrapeRecipeData();
+  if (recipeData) {
+    sendMessageToBackground({ action: "saveRecipe", data: recipeData });
+  }
+});
