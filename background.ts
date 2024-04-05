@@ -16,7 +16,7 @@ interface SendResponse {
 chrome.runtime.onMessage.addListener((message: { action: string; data?: RecipeData }, sender, sendResponse) => {
   if (message.action === "saveRecipe") {
     // Make sure the URL points to your actual API endpoint
-    fetch('https://yourbackend.com/api/recipes', {
+    fetch('http://localhost:5000/api/recipes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(message.data),
@@ -33,6 +33,22 @@ chrome.runtime.onMessage.addListener((message: { action: string; data?: RecipeDa
     return true; // indicates you wish to send a response asynchronously
   }
 });
+
+chrome.tabs.query({active: true, currentWindow: true}, (tabs) => {
+  chrome.scripting.executeScript({
+    target: {tabId: tabs[0]?.id ?? 0},
+    files: ['contentScript.js']
+  });
+});
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if(message.action === "doSomething") {
+    // Perform the action
+    console.log('Doing something with', message.payload);
+    // Optionally, send a response
+    sendResponse({status: 'completed'});
+  }
+});
+
 
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener(

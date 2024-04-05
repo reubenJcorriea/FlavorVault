@@ -58,3 +58,8 @@ document.addEventListener("DOMContentLoaded", () => {
     sendMessageToBackground({ action: "saveRecipe", data: recipeData });
   }
 });
+
+window.addEventListener('myCustomEvent', (event) => {
+  const customEvent = event as CustomEvent;
+  chrome.runtime.sendMessage(customEvent.detail);
+});

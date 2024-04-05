@@ -3,8 +3,16 @@ import './Header.scss';
 
 const Header: React.FC = () => {
     const handleClick = () => {
-        chrome.runtime.sendMessage({ action: "startScraping" });
+        const event = new CustomEvent('FlavorVaultTrigger', {
+            detail: { action: 'startScraping' }
+        });
+        window.dispatchEvent(event);
     };
+
+    const handleAction = () => {
+        const data = { action: 'doSomething', payload: {/* Your data here */} };
+        window.dispatchEvent(new CustomEvent('myCustomEvent', { detail: data }));
+      };
 
     return (
         <header className="header" onClick={handleClick}>
