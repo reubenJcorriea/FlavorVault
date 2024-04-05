@@ -18,6 +18,22 @@ interface SendResponse {
 // Listen for messages from content scripts
 chrome.runtime.onMessage.addListener(async (message: Message, sender, sendResponse: (response: SendResponse) => void) => {
   switch (message.action) {
+    case "startScraping":
+      // Code to inject contentScript.js into the current tab, which scrapes the recipe data
+      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+        if (tabs.length > 0 && tabs[0].id) {
+          chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            files: ['contentScript.js']
+          }).then(() => {
+            console.log("Content script has been injected for scraping.");
+          }).catch(error => {
+            console.error("Failed to inject content script:", error);
+            sendResponse({ status: "error", detail: "Failed to start scraping." });
+          });
+        }
+      });
+      break;
     case "saveRecipe":
       if (message.data) {
         try {
@@ -34,11 +50,11 @@ chrome.runtime.onMessage.addListener(async (message: Message, sender, sendRespon
       updateIcon(sender.tab?.id ?? 0, false);
       sendResponse({ status: "success", detail: "Invalid page detected" });
       break;
-    console.error("Scraping failed for", sender.tab?.url);
     case "fetchRecipes":
       const recipes = await fetchRecipes();
       sendResponse({ status: "success", data: recipes });
       break;
+    // Handle other cases...
   }
   return true; // Indicates an asynchronous response
 });
@@ -74,3 +90,6 @@ async function fetchRecipes(): Promise<RecipeData[]> {
     });
   });
 }
+
+
+
